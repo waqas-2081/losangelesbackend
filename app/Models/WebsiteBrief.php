@@ -39,6 +39,68 @@ class WebsiteBrief extends Model
         'need_responsive'         => 'boolean',
     ];
 
+    public function getBusinessDescriptionAttribute(): ?string
+    {
+        return $this->attributes['business_desc'] ?? null;
+    }
+
+    public function getBusinessIndustryAttribute(): ?string
+    {
+        return $this->attributes['industry'] ?? null;
+    }
+
+    public function getOverallFeelAttribute(): ?array
+    {
+        $value = $this->attributes['feel'] ?? null;
+        if (is_array($value)) return $value;
+        return $value ? json_decode($value, true) : null;
+    }
+
+    public function getCompetitorsReferencesAttribute(): ?string
+    {
+        return $this->attributes['competitors'] ?? null;
+    }
+
+    public function getPagesCountAttribute(): ?int
+    {
+        return isset($this->attributes['page_count']) ? (int) $this->attributes['page_count'] : null;
+    }
+
+    public function getPagesListAttribute(): ?string
+    {
+        return $this->attributes['page_names'] ?? null;
+    }
+
+    public function getWantsLogoRevampAttribute(): ?bool
+    {
+        return isset($this->attributes['revamp_logo']) ? (bool) $this->attributes['revamp_logo'] : null;
+    }
+
+    public function getNeedsHostingAttribute(): ?bool
+    {
+        return isset($this->attributes['need_hosting']) ? (bool) $this->attributes['need_hosting'] : null;
+    }
+
+    public function getNeedsResponsiveAttribute(): ?bool
+    {
+        return isset($this->attributes['need_responsive']) ? (bool) $this->attributes['need_responsive'] : null;
+    }
+
+    public function getProductsCountAttribute(): ?string
+    {
+        return $this->attributes['product_showcase_count'] ?? null;
+    }
+
+    public function getServicesCountNoPaymentAttribute(): ?string
+    {
+        return $this->attributes['service_showcase_count'] ?? null;
+    }
+
+    public function getServicesCountWithPriceAttribute(): ?string
+    {
+        return $this->attributes['services_prices'] ?? null;
+    }
+
     public function files(): HasMany
     {
         return $this->hasMany(WebsiteBriefFile::class);

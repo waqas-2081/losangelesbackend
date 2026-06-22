@@ -84,7 +84,7 @@ class WebsiteBriefController extends Controller
         $data = $validator->validated();
         unset($data['files']);
 
-        $brief = WebsiteBrief::create($data);
+        $brief = WebsiteBrief::create($this->mapBriefToDatabase($data));
 
         // Handle file uploads
         $uploadedFiles = [];
@@ -190,6 +190,13 @@ class WebsiteBriefController extends Controller
     private function sendBriefEmail(WebsiteBrief $brief, array $uploadedFiles = [])
     {
         try {
+            if (!class_exists(GmailApiService::class)) {
+                Log::warning('GmailApiService not available, skipping website brief email', [
+                    'brief_id' => $brief->id,
+                ]);
+                return;
+            }
+
             if (!$this->gmailApiService) {
                 $this->gmailApiService = new GmailApiService();
             }
@@ -343,12 +350,40 @@ class WebsiteBriefController extends Controller
 
             Log::info('WebsiteBrief notification email sent', ['brief_id' => $brief->id, 'admin' => $adminEmail]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to send WebsiteBrief notification email', [
                 'brief_id' => $brief->id,
                 'error' => $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Map API field names to database column names.
+     */
+    private function mapBriefToDatabase(array $data): array
+    {
+        $map = [
+            'business_description' => 'business_desc',
+            'business_industry' => 'industry',
+            'overall_feel' => 'feel',
+            'competitors_references' => 'competitors',
+            'pages_count' => 'page_count',
+            'pages_list' => 'page_names',
+            'wants_logo_revamp' => 'revamp_logo',
+            'needs_hosting' => 'need_hosting',
+            'needs_responsive' => 'need_responsive',
+            'products_count' => 'product_showcase_count',
+            'services_count_no_payment' => 'service_showcase_count',
+            'services_count_with_price' => 'services_prices',
+        ];
+
+        $mapped = [];
+        foreach ($data as $key => $value) {
+            $mapped[$map[$key] ?? $key] = $value;
+        }
+
+        return $mapped;
     }
 
     /**
