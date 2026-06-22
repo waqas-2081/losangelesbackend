@@ -324,30 +324,37 @@
 
             <!-- Sidebar -->
             <div>
-                <div class="card-box">
-                    <h5>Publishing</h5>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Status <span class="text-danger">*</span></label>
-                        <select name="status" class="form-select" required>
-                            <option value="draft" {{ old('status', $blog->status) == 'draft' ? 'selected' : '' }}>Draft</option>
-                            <option value="published" {{ old('status', $blog->status) == 'published' ? 'selected' : '' }}>Published</option>
-                        </select>
-                    </div>
+            <div class="card-box">
+                <h5>Publishing</h5>
+                
+                <div class="mb-3">
+                    <label class="form-label">Status <span class="text-danger">*</span></label>
+                    <select name="status" class="form-select" id="statusSelect" required>
+                        <option value="draft" {{ old('status', $blog->status) == 'draft' ? 'selected' : '' }}>Draft</option>
+                        <option value="published" {{ old('status', $blog->status) == 'published' ? 'selected' : '' }}>Published</option>
+                    </select>
+                </div>
 
-                    <div class="mb-3">
-                        <label class="form-label d-block">Featured Post</label>
-                        <div style="display: flex; align-items: center;">
-                            <label class="toggle-switch">
-                                <input type="hidden" name="is_featured" value="0">
-                                <input type="checkbox" name="is_featured" id="isFeatured" value="1" 
-                                       {{ old('is_featured', $blog->is_featured) ? 'checked' : '' }}>
-                                <span class="toggle-slider"></span>
-                            </label>
-                            <span class="toggle-label">Show in featured section</span>
-                        </div>
+                <div class="mb-3" id="publishDateWrapper">
+                    <label class="form-label">Publish Date</label>
+                    <input type="date" name="published_at" class="form-control"
+                        value="{{ old('published_at', $blog->published_at ? $blog->published_at->format('Y-m-d') : '') }}">
+                    <small class="text-muted">Leave empty to use current date/time when published</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label d-block">Featured Post</label>
+                    <div style="display: flex; align-items: center;">
+                        <label class="toggle-switch">
+                            <input type="hidden" name="is_featured" value="0">
+                            <input type="checkbox" name="is_featured" id="isFeatured" value="1" 
+                                {{ old('is_featured', $blog->is_featured) ? 'checked' : '' }}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">Show in featured section</span>
                     </div>
                 </div>
+            </div>
 
                 <div class="card-box">
                     <h5>Author Information</h5>
@@ -396,12 +403,13 @@
 @endsection
 
 @section('scripts')
-<script src="https://cdn.tiny.cloud/1/{{ env('TINYMCE_API_KEY', 'no-api-key') }}/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.tiny.cloud/1/{{ env('TINYMCE_API_KEY') ? env('TINYMCE_API_KEY') : '' }}/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 
 <script>
 $(document).ready(function() {
+
     // Initialize TinyMCE
     tinymce.init({
         selector: '#content',
@@ -429,10 +437,8 @@ $(document).ready(function() {
     });
 
     // Auto-generate slug from title
-    let slugModified = {{ $blog->slug ? 'true' : 'false' }};
-    
     $('#title').on('input', function() {
-        if (!slugModified) {
+        if (!$('#slug').data('user-modified')) {
             let slug = $(this).val()
                 .toLowerCase()
                 .replace(/[^\w\s-]/g, '')
@@ -443,10 +449,10 @@ $(document).ready(function() {
     });
 
     $('#slug').on('input', function() {
-        slugModified = true;
+        $(this).data('user-modified', true);
     });
 
-    // Character counter
+    // Character counter for short description
     $('#short_description').on('input', function() {
         let length = $(this).val().length;
         $('#charCount').text(length);
@@ -470,6 +476,19 @@ $(document).ready(function() {
             $('#imagePreview').hide();
         }
     });
+
+    // Toggle Publish Date field based on status
+    function togglePublishDate() {
+        if ($('#statusSelect').val() === 'draft') {
+            $('#publishDateWrapper').hide();
+        } else {
+            $('#publishDateWrapper').show();
+        }
+    }
+
+    $('#statusSelect').on('change', togglePublishDate);
+    togglePublishDate(); // run on page load
+
 });
 </script>
 @endsection

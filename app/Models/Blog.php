@@ -20,6 +20,7 @@ class Blog extends Model
         'content',
         'thumbnail_image',
         'status',
+        'published_at',
         'meta_title',
         'meta_description',
         'meta_keywords',
@@ -30,6 +31,7 @@ class Blog extends Model
 
     protected $casts = [
         'is_featured' => 'boolean',
+        'published_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -51,8 +53,8 @@ class Blog extends Model
 
     public function getThumbnailUrlAttribute()
     {
-        return $this->thumbnail_image 
-            ? asset('storage/' . $this->thumbnail_image) 
+        return $this->thumbnail_image
+            ? asset('storage/' . $this->thumbnail_image)
             : asset('images/default-blog.jpg');
     }
 

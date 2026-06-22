@@ -17,6 +17,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/logo-brief', [LogoBriefController::class, 'store']);
 Route::post('/website-briefs', [WebsiteBriefController::class, 'store']);
 Route::post('/contacts', [ContactController::class, 'store']);
+Route::post('/contact/autosave', [ContactController::class, 'autosave']);
 
 Route::prefix('v1')->group(function () {
     Route::get('/packages', [PackageController::class, 'index']);

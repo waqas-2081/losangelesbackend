@@ -29,7 +29,7 @@ class BlogController extends Controller
         }
 
         $perPage = $request->get('per_page', 12);
-        $blogs = $query->latest()->paginate($perPage);
+        $blogs = $query->latest('published_at')->paginate($perPage);
 
         return response()->json([
             'success' => true,
@@ -60,7 +60,7 @@ class BlogController extends Controller
     public function latest()
     {
         $blogs = Blog::published()
-            ->latest()
+            ->latest('published_at')
             ->limit(5)
             ->get();
 
@@ -74,7 +74,7 @@ class BlogController extends Controller
     {
         $blogs = Blog::published()
             ->featured()
-            ->latest()
+            ->latest('published_at')
             ->limit(3)
             ->get();
 
@@ -104,6 +104,8 @@ class BlogController extends Controller
 
     private function formatBlogItem($blog)
     {
+        $date = $blog->published_at ?? $blog->created_at;
+
         return [
             'id' => $blog->id,
             'title' => $blog->title,
@@ -112,9 +114,9 @@ class BlogController extends Controller
             'short_description' => $blog->short_description ?? Str::limit(strip_tags($blog->content), 200),
             'thumbnail' => $blog->thumbnail_url,
             'is_featured' => $blog->is_featured,
-            'created_at' => $blog->created_at->format('Y-m-d H:i:s'),
-            'formatted_date' => $blog->created_at->format('M d, Y'),
+            'created_at' => $date->format('Y-m-d H:i:s'),
+            'formatted_date' => $date->format('M d, Y'),
             'url' => "/blog/{$blog->slug}",
         ];
     }
-}
+}c

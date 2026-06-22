@@ -61,6 +61,7 @@ class BlogController extends Controller
             'content' => 'required|string',
             'thumbnail_image' => 'nullable|image|max:2048',
             'status' => 'required|in:draft,published',
+            'published_at' => 'nullable|date',
             'meta_title' => 'nullable|string|max:500',
             'meta_description' => 'nullable|string|max:500',
             'meta_keywords' => 'nullable|string|max:500',
@@ -75,6 +76,11 @@ class BlogController extends Controller
         }
 
         $validated['is_featured'] = $request->boolean('is_featured');
+
+        // If status is published and no date given, default to now
+        if ($validated['status'] === 'published' && empty($validated['published_at'])) {
+            $validated['published_at'] = now();
+        }
 
         // Handle image upload
         if ($request->hasFile('thumbnail_image')) {
@@ -103,6 +109,7 @@ class BlogController extends Controller
             'content' => 'required|string',
             'thumbnail_image' => 'nullable|image|max:2048',
             'status' => 'required|in:draft,published',
+            'published_at' => 'nullable|date',
             'meta_title' => 'nullable|string|max:500',
             'meta_description' => 'nullable|string|max:500',
             'meta_keywords' => 'nullable|string|max:500',
@@ -116,6 +123,11 @@ class BlogController extends Controller
         }
 
         $validated['is_featured'] = $request->boolean('is_featured');
+
+        // If status is published and no date given, default to now
+        if ($validated['status'] === 'published' && empty($validated['published_at'])) {
+            $validated['published_at'] = $blog->published_at ?? now();
+        }
 
         // Handle image upload
         if ($request->hasFile('thumbnail_image')) {

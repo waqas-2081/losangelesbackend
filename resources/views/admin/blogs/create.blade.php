@@ -338,30 +338,37 @@
 
             <!-- Sidebar -->
             <div>
-                <div class="card-box">
-                    <h5>Publishing</h5>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Status <span class="text-danger">*</span></label>
-                        <select name="status" class="form-select" required>
-                            <option value="draft" {{ old('status') == 'draft' ? 'selected' : '' }}>Draft</option>
-                            <option value="published" {{ old('status') == 'published' ? 'selected' : '' }}>Published</option>
-                        </select>
-                    </div>
+            <div class="card-box">
+                <h5>Publishing</h5>
+                
+                <div class="mb-3">
+                    <label class="form-label">Status <span class="text-danger">*</span></label>
+                    <select name="status" class="form-select" id="statusSelect" required>
+                        <option value="draft" {{ old('status') == 'draft' ? 'selected' : '' }}>Draft</option>
+                        <option value="published" {{ old('status') == 'published' ? 'selected' : '' }}>Published</option>
+                    </select>
+                </div>
 
-                    <div class="mb-3">
-                        <label class="form-label d-block">Featured Post</label>
-                        <div style="display: flex; align-items: center;">
-                            <label class="toggle-switch">
-                                <input type="hidden" name="is_featured" value="0">
-                                <input type="checkbox" name="is_featured" id="isFeatured" value="1" 
-                                       {{ old('is_featured') ? 'checked' : '' }}>
-                                <span class="toggle-slider"></span>
-                            </label>
-                            <span class="toggle-label">Show in featured section</span>
-                        </div>
+                <div class="mb-3" id="publishDateWrapper">
+                    <label class="form-label">Publish Date</label>
+                    <input type="date" name="published_at" class="form-control"
+                        value="{{ old('published_at') }}">
+                    <small class="text-muted">Leave empty to use current date/time when published</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label d-block">Featured Post</label>
+                    <div style="display: flex; align-items: center;">
+                        <label class="toggle-switch">
+                            <input type="hidden" name="is_featured" value="0">
+                            <input type="checkbox" name="is_featured" id="isFeatured" value="1" 
+                                {{ old('is_featured') ? 'checked' : '' }}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">Show in featured section</span>
                     </div>
                 </div>
+            </div>
 
                 <div class="card-box">
                     <h5>Author Information</h5>
@@ -409,6 +416,7 @@
 
 <script>
 $(document).ready(function() {
+
     // Initialize TinyMCE
     tinymce.init({
         selector: '#content',
@@ -434,7 +442,6 @@ $(document).ready(function() {
             });
         }
     });
-
 
     // Auto-generate slug from title
     $('#title').on('input', function() {
@@ -476,6 +483,19 @@ $(document).ready(function() {
             $('#imagePreview').hide();
         }
     });
+
+    // Toggle Publish Date field based on status
+    function togglePublishDate() {
+        if ($('#statusSelect').val() === 'draft') {
+            $('#publishDateWrapper').hide();
+        } else {
+            $('#publishDateWrapper').show();
+        }
+    }
+
+    $('#statusSelect').on('change', togglePublishDate);
+    togglePublishDate(); // run on page load
+
 });
 </script>
 @endsection
