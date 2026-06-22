@@ -35,6 +35,7 @@ class Portfolio extends Model
             'Mobile App' => 'Mobile App',
             'Social Media' => 'Social Media',
             'SEO' => 'SEO',
+            'Video Animation' => 'Video Animation',
             'Branding' => 'Branding',
         ];
     }
