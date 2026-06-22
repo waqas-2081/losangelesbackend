@@ -29,29 +29,24 @@
 
 @php
     $websiteTypeLabels = [
-        'informative_without_payment'       => 'Informative (without payment integration)',
-        'informative_with_payment_services' => 'Informative (with payment – sell services)',
-        'informative_with_payment_products' => 'Informative (with payment – sell products)',
-        'ecommerce'                         => 'E-Commerce (online store)',
-        'custom_web_app'                    => 'Custom Web App',
+        'informative-no-payment'   => 'Informative (without payment integration)',
+        'informative-with-payment' => 'Informative (with payment integration to sell services)',
+        'ecommerce'                => 'E-commerce (product upload with payment integration)',
+        'web-app'                  => 'Web app (with custom dashboard)',
     ];
 
     $feelLabels = [
-        'corporate' => 'Corporate', 'fun'      => 'Fun',    'trendy'   => 'Trendy',
-        'friendly'  => 'Friendly',  'hi-tech'  => 'Hi-tech','minimal'  => 'Minimal',
-        'dark'      => 'Dark',      'light'    => 'Light',
+        'Corporate' => 'Corporate', 'Fun' => 'Fun', 'Trendy' => 'Trendy', 'Friendly' => 'Friendly',
+        'Hi-tech' => 'Hi-tech', 'Minimal' => 'Minimal', 'Dark' => 'Dark', 'Light' => 'Light',
     ];
 
     $addonLabels = [
-        'chat_integration'   => 'Chat Integration',    'custom_dashboard' => 'Custom Dashboard',
-        'database'           => 'Database',            'hover_effects'    => 'Hover Effects',
-        'security_encryption'=> 'Security Encryption', 'sign_up_sign_in'  => 'Sign Up / Sign In',
-        'newsletter'         => 'Newsletter',          'website_content'  => 'Website Content',
-        'ssl_certification'  => 'SSL Certification',   'custom_forms'     => 'Custom Forms',
-        'social_media_feed'  => 'Social Media Feed',   'seo_optimization' => 'SEO Optimization',
-        'ada_compliance'     => 'ADA Compliance',      'blogs'            => 'Blogs',
-        '3rd_party_api'      => '3rd Party API',       'digital_marketing'=> 'Digital Marketing',
-        'videos_animations'  => 'Videos & Animations',
+        'chat' => 'Chat integration', 'dashboard' => 'Custom dashboard', 'database' => 'Database',
+        'hover' => 'Hover effects', 'encryption' => 'Security encryption', 'signin' => 'Sign in',
+        'newsletter' => 'Newsletter', 'content' => 'Website content', 'ssl' => 'SSL certification',
+        'forms' => 'Custom forms', 'social' => 'Social media feed', 'seo' => 'SEO optimization',
+        'ada' => 'ADA compliance', 'blogs' => 'Blogs', 'api' => '3rd party API',
+        'marketing' => 'Digital marketing', 'videos' => 'Videos & animations',
     ];
 
     $yn = fn($val) => is_null($val)
@@ -108,19 +103,37 @@
                     </div>
                 </div>
 
-                {{-- Conditional: informative without payment --}}
-                @if($brief->website_type === 'informative_without_payment')
-                    <div class="info-row"><div class="info-label">Products to Showcase</div><div class="info-value">{{ $brief->products_count ?? '—' }}</div></div>
-                    <div class="info-row"><div class="info-label">Services to Showcase</div><div class="info-value">{{ $brief->services_count_no_payment ?? '—' }}</div></div>
+                {{-- Conditional: informative-no-payment --}}
+                @if($brief->website_type === 'informative-no-payment')
+                    <div class="info-row"><div class="info-label">Products to Showcase</div><div class="info-value">{{ $brief->product_showcase_count ?? '—' }}</div></div>
+                    <div class="info-row"><div class="info-label">Services to Showcase</div><div class="info-value">{{ $brief->service_showcase_count ?? '—' }}</div></div>
                     <div class="info-row"><div class="info-label">Future Images/Products</div><div class="info-value" style="white-space:pre-wrap;">{{ $brief->future_images_products ?? '—' }}</div></div>
                 @endif
 
-                {{-- Conditional: informative with payment (services) --}}
-                @if($brief->website_type === 'informative_with_payment_services')
-                    <div class="info-row"><div class="info-label">Services & Prices</div><div class="info-value" style="white-space:pre-wrap;">{{ $brief->services_count_with_price ?? '—' }}</div></div>
+                {{-- Conditional: informative-with-payment --}}
+                @if($brief->website_type === 'informative-with-payment')
+                    <div class="info-row"><div class="info-label">Services & Prices</div><div class="info-value" style="white-space:pre-wrap;">{{ $brief->services_prices ?? '—' }}</div></div>
                     <div class="info-row"><div class="info-label">Accept Online Payments</div><div class="info-value">{!! $yn($brief->accept_online_payments) !!}</div></div>
                     <div class="info-row"><div class="info-label">Payment Medium</div><div class="info-value">{{ $brief->payment_medium ?? '—' }}</div></div>
                     <div class="info-row"><div class="info-label">Future Images/Services</div><div class="info-value" style="white-space:pre-wrap;">{{ $brief->future_images_services ?? '—' }}</div></div>
+                @endif
+
+                {{-- Conditional: ecommerce --}}
+                @if($brief->website_type === 'ecommerce')
+                    <div class="info-row"><div class="info-label">Product Categories</div><div class="info-value">{{ $brief->product_categories ?? '—' }}</div></div>
+                    <div class="info-row"><div class="info-label">Number of Products</div><div class="info-value">{{ $brief->product_count ?? '—' }}</div></div>
+                    <div class="info-row"><div class="info-label">Product Sourcing</div><div class="info-value" style="white-space:pre-wrap;">{{ $brief->product_source ?? '—' }}</div></div>
+                    <div class="info-row"><div class="info-label">Accept Online Payments</div><div class="info-value">{!! $yn($brief->accept_online_payments) !!}</div></div>
+                    <div class="info-row"><div class="info-label">Payment Medium</div><div class="info-value">{{ $brief->payment_medium ?? '—' }}</div></div>
+                    <div class="info-row"><div class="info-label">Future Images/Products</div><div class="info-value" style="white-space:pre-wrap;">{{ $brief->future_images_products ?? '—' }}</div></div>
+                    <div class="info-row"><div class="info-label">Preferred Platform</div><div class="info-value">{{ $brief->platform_required ?? '—' }}</div></div>
+                @endif
+
+                {{-- Conditional: web-app --}}
+                @if($brief->website_type === 'web-app')
+                    <div class="info-row"><div class="info-label">Preferred Platform / Stack</div><div class="info-value">{{ $brief->platform_required ?? '—' }}</div></div>
+                    <div class="info-row"><div class="info-label">Accept Online Payments</div><div class="info-value">{!! $yn($brief->accept_online_payments) !!}</div></div>
+                    <div class="info-row"><div class="info-label">Payment Medium</div><div class="info-value">{{ $brief->payment_medium ?? '—' }}</div></div>
                 @endif
             </div>
 
@@ -129,16 +142,16 @@
                 <h5 class="detail-title"><i class="fa-solid fa-bullseye"></i> Brand & Audience</h5>
                 <div class="info-row">
                     <div class="info-label">Business Description</div>
-                    <div class="info-value" style="white-space:pre-wrap;">{{ $brief->business_description }}</div>
+                    <div class="info-value" style="white-space:pre-wrap;">{{ $brief->business_desc }}</div>
                 </div>
-                <div class="info-row"><div class="info-label">Industry</div><div class="info-value">{{ $brief->business_industry ?? '—' }}</div></div>
+                <div class="info-row"><div class="info-label">Industry</div><div class="info-value">{{ $brief->industry ?? '—' }}</div></div>
                 <div class="info-row"><div class="info-label">Target Audience</div><div class="info-value">{{ $brief->target_audience ?? '—' }}</div></div>
                 <div class="info-row">
                     <div class="info-label">Overall Feel</div>
                     <div class="info-value">
-                        @if($brief->overall_feel && count($brief->overall_feel))
-                            @foreach($brief->overall_feel as $feel)
-                                <span class="tag-pill">{{ $feelLabels[$feel] ?? ucfirst($feel) }}</span>
+                        @if($brief->feel && count($brief->feel))
+                            @foreach($brief->feel as $feelItem)
+                                <span class="tag-pill">{{ $feelLabels[$feelItem] ?? $feelItem }}</span>
                             @endforeach
                         @else
                             <span class="text-muted">None selected</span>
@@ -147,7 +160,7 @@
                 </div>
                 <div class="info-row">
                     <div class="info-label">Competitor References</div>
-                    <div class="info-value" style="white-space:pre-wrap;">{{ $brief->competitors_references ?? '—' }}</div>
+                    <div class="info-value" style="white-space:pre-wrap;">{{ $brief->competitors ?? '—' }}</div>
                 </div>
             </div>
 
@@ -155,15 +168,15 @@
             <div class="detail-card">
                 <h5 class="detail-title"><i class="fa-solid fa-sitemap"></i> Site Structure & Assets</h5>
                 <div class="info-row"><div class="info-label">Has Domain?</div><div class="info-value">{!! $yn($brief->has_domain) !!}</div></div>
-                <div class="info-row"><div class="info-label">Number of Pages</div><div class="info-value">{{ $brief->pages_count }}</div></div>
+                <div class="info-row"><div class="info-label">Number of Pages</div><div class="info-value">{{ $brief->page_count }}</div></div>
                 <div class="info-row">
                     <div class="info-label">Pages List</div>
-                    <div class="info-value" style="white-space:pre-wrap;">{{ $brief->pages_list ?? '—' }}</div>
+                    <div class="info-value" style="white-space:pre-wrap;">{{ $brief->page_names ?? '—' }}</div>
                 </div>
                 <div class="info-row"><div class="info-label">Has Logo?</div><div class="info-value">{!! $yn($brief->has_logo) !!}</div></div>
-                <div class="info-row"><div class="info-label">Wants Logo Revamp?</div><div class="info-value">{!! $yn($brief->wants_logo_revamp) !!}</div></div>
-                <div class="info-row"><div class="info-label">Needs Hosting?</div><div class="info-value">{!! $yn($brief->needs_hosting) !!}</div></div>
-                <div class="info-row"><div class="info-label">Needs Responsive?</div><div class="info-value">{!! $yn($brief->needs_responsive) !!}</div></div>
+                <div class="info-row"><div class="info-label">Wants Logo Revamp?</div><div class="info-value">{!! $yn($brief->revamp_logo) !!}</div></div>
+                <div class="info-row"><div class="info-label">Needs Hosting?</div><div class="info-value">{!! $yn($brief->need_hosting) !!}</div></div>
+                <div class="info-row"><div class="info-label">Needs Responsive?</div><div class="info-value">{!! $yn($brief->need_responsive) !!}</div></div>
             </div>
 
             {{-- 5. Add-on Features --}}
@@ -172,7 +185,7 @@
                 @if($brief->addon_features && count($brief->addon_features))
                     <div class="d-flex flex-wrap gap-1">
                         @foreach($brief->addon_features as $addon)
-                            <span class="addon-pill">{{ $addonLabels[$addon] ?? ucfirst(str_replace('_', ' ', $addon)) }}</span>
+                            <span class="addon-pill">{{ $addonLabels[$addon] ?? ucfirst($addon) }}</span>
                         @endforeach
                     </div>
                 @else
