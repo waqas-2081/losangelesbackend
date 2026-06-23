@@ -22,4 +22,46 @@ class PromoLeadController extends Controller
 
         return response()->json(['success' => true], 201);
     }
+
+    public function autosave(Request $request)
+    {
+        $allowedFields = ['customer_name', 'customer_email', 'customer_phone', 'project_details', 'source'];
+        $data = $request->only($allowedFields);
+
+        $filtered = [];
+        foreach ($data as $key => $value) {
+            if ($value !== null && $value !== '' && trim($value) !== '') {
+                $filtered[$key] = trim($value);
+            }
+        }
+
+        if (empty($filtered)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No data provided.'
+            ], 422);
+        }
+
+        $finalData = array_merge(array_fill_keys($allowedFields, null), $filtered);
+
+        if (empty($finalData['source'])) {
+            $finalData['source'] = 'home_promo_popup';
+        }
+
+        try {
+            $lead = PromoLead::create($finalData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Draft saved.',
+                'data' => $lead
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Auto-save failed.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

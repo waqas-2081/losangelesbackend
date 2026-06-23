@@ -119,4 +119,4 @@ class BlogController extends Controller
             'url' => "/blog/{$blog->slug}",
         ];
     }
-}c
+}
