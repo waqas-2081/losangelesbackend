@@ -31,4 +31,22 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'stripe' => [
+        'key'            => env('STRIPE_KEY'),
+        'secret'         => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+    
+    'paypal' => [
+        'client_id' => env('PAYPAL_CLIENT_ID'),
+        'secret'    => env('PAYPAL_SECRET'),
+        'mode'      => env('PAYPAL_MODE', 'live'), // 'sandbox' or 'live'
+    ],
+    
+    'msbadmin' => [
+        'webhook_url'    => env('MSBADMIN_WEBHOOK_URL'),
+        'webhook_url_briefs' => env('MSB_WEBHOOK_URL_BRIEFS'),
+        'webhook_secret' => env('MSBADMIN_WEBHOOK_SECRET'),
+    ],
+
 ];
