@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\PromoLeadController;
 use App\Http\Controllers\Admin\WebsiteBriefController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\AuthControllerGmail;
 use App\Http\Controllers\Admin\DashboardController;
 
 /*
@@ -21,6 +22,13 @@ use App\Http\Controllers\Admin\DashboardController;
 Route::get('/', function () {
     return redirect()->route('login');
 });
+
+
+Route::get('/gmail-auth-url', [AuthControllerGmail::class, 'getGmailAuthUrl']);
+Route::get('/gmail-auth-callback-redirect', [AuthControllerGmail::class, 'handleGmailAuthRedirect']);
+Route::post('/gmail-auth-callback', [AuthControllerGmail::class, 'handleGmailAuthCallback']);
+Route::get('/gmail-auth-status', [AuthControllerGmail::class, 'checkGmailAuthStatus']);
+Route::delete('/gmail-clear-tokens', [AuthControllerGmail::class, 'clearGmailTokens']);
 
 // ─── Guest Routes (not logged in) ──────────────────────────────────────────────
 Route::middleware('guest')->group(function () {

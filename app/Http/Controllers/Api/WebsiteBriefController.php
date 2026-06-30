@@ -114,7 +114,7 @@ class WebsiteBriefController extends Controller
 
                 $uploadedFiles[] = [
                     'original_name' => $originalName,
-                    'url' => '/public/storage/' . $path,
+                    'url' => '/storage/' . $path,
                     'human_size' => $humanSize,
                     'mime_type' => $mimeType,
                 ];
@@ -444,7 +444,7 @@ class WebsiteBriefController extends Controller
                     <!-- Header -->
                     <tr>
                         <td align="center" style="background-color: #1a1a2e; padding: 28px 40px;">
-                            <img src="https://sanjoselogodesign.com/assets/images/logo/logo-white.png"
+                            <img src="https://losangeleslogodesigns.com/assets/la-logo-designs-DOx3q257.png"
                                  alt="' . env('APP_NAME') . '"
                                  style="max-height: 60px; max-width: 220px; display: block;"
                             />

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\PackageController;
 use App\Http\Controllers\Api\PortfolioController;
 use App\Http\Controllers\Api\PromoLeadController;
 use App\Http\Controllers\Api\WebsiteBriefController;
+use App\Http\Controllers\Api\PaymentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -32,6 +33,26 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/portfolios', [PortfolioController::class, 'apiIndex']);
     Route::get('/portfolio-categories', [PortfolioController::class, 'apiCategories']);
+    
+    
 });
+
+// ── Payment requests ────────────────────────────────────────────────────────
+
+Route::post('payment-requests', [PaymentController::class, 'store']);
+Route::get('payment-requests/by-link/{token}', [PaymentController::class, 'showByLink']);
+
+Route::post('payment-requests/{id}/stripe/intent',  [PaymentController::class, 'stripeIntent']);
+Route::post('payment-requests/{id}/stripe/confirm', [PaymentController::class, 'stripeConfirm']);
+
+Route::post('payment-requests/{id}/cashapp/intent',  [PaymentController::class, 'cashappIntent']);
+Route::post('payment-requests/{id}/cashapp/confirm', [PaymentController::class, 'cashappConfirm']);
+
+Route::post('payment-requests/{id}/paypal/create-order', [PaymentController::class, 'paypalCreateOrder']);
+Route::post('payment-requests/{id}/paypal/capture',      [PaymentController::class, 'paypalCapture']);
+
+Route::post('payment-requests/{id}/zelle/approve', [PaymentController::class, 'zelleApprove']);
+
+Route::post('stripe/webhook', [PaymentController::class, 'stripeWebhook']);
 
 Route::post('/home-promo-lead', [PromoLeadController::class, 'store']);
