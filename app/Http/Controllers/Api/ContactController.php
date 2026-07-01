@@ -16,7 +16,7 @@ class ContactController extends Controller
     {
         try {
             $this->gmailApiService = new GmailApiService();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to initialize Gmail API service', [
                 'error' => $e->getMessage()
             ]);
@@ -121,7 +121,7 @@ class ContactController extends Controller
 
             Log::info('Contact notification email sent', ['contact_id' => $contact->id, 'admin' => $adminEmail]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to send contact notification email', [
                 'contact_id' => $contact->id,
                 'error'      => $e->getMessage()

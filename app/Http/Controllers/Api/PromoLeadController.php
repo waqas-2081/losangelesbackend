@@ -16,7 +16,7 @@ class PromoLeadController extends Controller
     {
         try {
             $this->gmailApiService = new GmailApiService();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to initialize Gmail API service', [
                 'error' => $e->getMessage()
             ]);
@@ -26,12 +26,24 @@ class PromoLeadController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'customer_name'   => 'required|string|max:255',
-            'customer_email'  => 'required|email|max:255',
-            'customer_phone'  => 'required|string|max:50',
+            'customer_name'   => 'nullable|string|max:255',
+            'customer_email'  => 'nullable|email|max:255',
+            'customer_phone'  => 'nullable|string|max:50',
             'project_details' => 'nullable|string|max:2000',
             'source'          => 'nullable|string|max:100',
         ]);
+
+        if (
+            empty($validated['customer_name'])
+            && empty($validated['customer_email'])
+            && empty($validated['customer_phone'])
+            && empty($validated['project_details'])
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please enter at least one detail.',
+            ], 422);
+        }
 
         $lead = PromoLead::create($validated);
 
@@ -110,7 +122,7 @@ class PromoLeadController extends Controller
 
             Log::info('Get A Quote notification email sent', ['lead_id' => $lead->id, 'admin' => $adminEmail]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to send Get A Quote notification email', [
                 'lead_id' => $lead->id,
                 'error'   => $e->getMessage()

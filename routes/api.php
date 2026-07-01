@@ -56,3 +56,4 @@ Route::post('payment-requests/{id}/zelle/approve', [PaymentController::class, 'z
 Route::post('stripe/webhook', [PaymentController::class, 'stripeWebhook']);
 
 Route::post('/home-promo-lead', [PromoLeadController::class, 'store']);
+Route::post('/home-promo-lead/autosave', [PromoLeadController::class, 'autosave']);
