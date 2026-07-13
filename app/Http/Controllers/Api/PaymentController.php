@@ -39,14 +39,14 @@ class PaymentController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'profile'        => 'nullable|string|max:100',
-            'customer_name'  => 'required|string|max:255',
-            'email'          => 'nullable|email|max:255',
-            'phone'          => 'nullable|string|max:30',
-            'package_name'   => 'nullable|string|max:255',
-            'amount'         => 'required|numeric|min:0.01',
+            'profile' => 'nullable|string|max:100',
+            'customer_name' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:30',
+            'package_name' => 'nullable|string|max:255',
+            'amount' => 'required|numeric|min:0.01',
             'payment_method' => 'required|in:stripe,paypal,cashapp,zelle,venmo',
-            'payment_type'   => 'nullable|in:front,upsell',
+            'payment_type' => 'nullable|in:front,upsell',
         ]);
 
         do {
@@ -54,24 +54,24 @@ class PaymentController extends Controller
         } while (PaymentRequest::where('payment_link', $paymentLink)->exists());
 
         $paymentRequest = PaymentRequest::create([
-            'profile'        => $validated['profile'] ?? null,
-            'customer_name'  => $validated['customer_name'],
-            'email'          => $validated['email'] ?? null,
-            'phone'          => $validated['phone'] ?? null,
-            'package_name'   => $validated['package_name'] ?? null,
-            'amount'         => $validated['amount'],
+            'profile' => $validated['profile'] ?? null,
+            'customer_name' => $validated['customer_name'],
+            'email' => $validated['email'] ?? null,
+            'phone' => $validated['phone'] ?? null,
+            'package_name' => $validated['package_name'] ?? null,
+            'amount' => $validated['amount'],
             'payment_method' => $validated['payment_method'],
-            'payment_type'   => $validated['payment_type'] ?? null,
-            'status'         => 'pending',
-            'payment_link'   => $paymentLink,
+            'payment_type' => $validated['payment_type'] ?? null,
+            'status' => 'pending',
+            'payment_link' => $paymentLink,
         ]);
 
         $this->sendPaymentWebhook('payment.pending', $paymentRequest);
 
         return response()->json([
             'success' => true,
-            'data'    => [
-                'id'           => $paymentRequest->id,
+            'data' => [
+                'id' => $paymentRequest->id,
                 'payment_link' => $paymentLink,
             ],
         ], 201);
@@ -88,17 +88,17 @@ class PaymentController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => [
-                'id'             => $paymentRequest->id,
-                'payment_link'   => $paymentRequest->payment_link,
-                'customer_name'  => $paymentRequest->customer_name,
-                'email'          => $paymentRequest->email,
-                'phone'          => $paymentRequest->phone,
-                'package_name'   => $paymentRequest->package_name,
-                'amount'         => $paymentRequest->amount,
+            'data' => [
+                'id' => $paymentRequest->id,
+                'payment_link' => $paymentRequest->payment_link,
+                'customer_name' => $paymentRequest->customer_name,
+                'email' => $paymentRequest->email,
+                'phone' => $paymentRequest->phone,
+                'package_name' => $paymentRequest->package_name,
+                'amount' => $paymentRequest->amount,
                 'payment_method' => $paymentRequest->payment_method,
-                'status'         => $paymentRequest->status,
-                'profile'        => $paymentRequest->profile,
+                'status' => $paymentRequest->status,
+                'profile' => $paymentRequest->profile,
                 // payment_type intentionally omitted — admin-only field
             ],
         ]);
@@ -119,7 +119,7 @@ class PaymentController extends Controller
 
         if ($paymentRequest->stripe_payment_intent_id && $paymentRequest->stripe_client_secret) {
             return response()->json([
-                'success'       => true,
+                'success' => true,
                 'client_secret' => $paymentRequest->stripe_client_secret,
             ]);
         }
@@ -128,25 +128,25 @@ class PaymentController extends Controller
             Stripe::setApiKey(config('services.stripe.secret'));
 
             $intent = PaymentIntent::create([
-                'amount'               => $paymentRequest->amountInCents(),
-                'currency'             => 'usd',
+                'amount' => $paymentRequest->amountInCents(),
+                'currency' => 'usd',
                 'payment_method_types' => ['card'],
-                'metadata'             => [
+                'metadata' => [
                     'payment_request_id' => $paymentRequest->id,
-                    'customer_name'      => $paymentRequest->customer_name,
-                    'email'              => $paymentRequest->email ?? '',
+                    'customer_name' => $paymentRequest->customer_name,
+                    'email' => $paymentRequest->email ?? '',
                 ],
                 'description' => "Payment for {$paymentRequest->customer_name}",
             ]);
 
             $paymentRequest->update([
                 'stripe_payment_intent_id' => $intent->id,
-                'stripe_client_secret'     => $intent->client_secret,
-                'status'                   => 'pending',
+                'stripe_client_secret' => $intent->client_secret,
+                'status' => 'pending',
             ]);
 
             return response()->json([
-                'success'       => true,
+                'success' => true,
                 'client_secret' => $intent->client_secret,
             ]);
         } catch (ApiErrorException $e) {
@@ -184,7 +184,7 @@ class PaymentController extends Controller
 
                 if (!$duplicate) {
                     $paymentRequest->update([
-                        'status'         => 'paid',
+                        'status' => 'paid',
                         'transaction_id' => $intent->id,
                     ]);
                 }
@@ -221,7 +221,7 @@ class PaymentController extends Controller
 
         if ($paymentRequest->cashapp_payment_intent_id && $paymentRequest->stripe_client_secret) {
             return response()->json([
-                'success'       => true,
+                'success' => true,
                 'client_secret' => $paymentRequest->stripe_client_secret,
             ]);
         }
@@ -230,23 +230,23 @@ class PaymentController extends Controller
             Stripe::setApiKey(config('services.stripe.secret'));
 
             $intent = PaymentIntent::create([
-                'amount'               => $paymentRequest->amountInCents(),
-                'currency'             => 'usd',
+                'amount' => $paymentRequest->amountInCents(),
+                'currency' => 'usd',
                 'payment_method_types' => ['cashapp'],
-                'metadata'             => [
+                'metadata' => [
                     'payment_request_id' => $paymentRequest->id,
-                    'customer_name'      => $paymentRequest->customer_name,
+                    'customer_name' => $paymentRequest->customer_name,
                 ],
             ]);
 
             $paymentRequest->update([
                 'cashapp_payment_intent_id' => $intent->id,
-                'stripe_client_secret'      => $intent->client_secret,
-                'status'                    => 'pending',
+                'stripe_client_secret' => $intent->client_secret,
+                'status' => 'pending',
             ]);
 
             return response()->json([
-                'success'       => true,
+                'success' => true,
                 'client_secret' => $intent->client_secret,
             ]);
         } catch (ApiErrorException $e) {
@@ -284,7 +284,7 @@ class PaymentController extends Controller
 
                 if (!$duplicate) {
                     $paymentRequest->update([
-                        'status'         => 'paid',
+                        'status' => 'paid',
                         'transaction_id' => $intent->id,
                     ]);
                 }
@@ -328,30 +328,32 @@ class PaymentController extends Controller
                 : 'https://api-m.sandbox.paypal.com';
 
             $response = \Http::withToken($accessToken)->post("{$baseUrl}/v2/checkout/orders", [
-                'intent'         => 'CAPTURE',
-                'purchase_units' => [[
-                    'amount'      => [
-                        'currency_code' => 'USD',
-                        'value'         => number_format($paymentRequest->amount, 2, '.', ''),
-                    ],
-                    'description' => "Payment for {$paymentRequest->customer_name}",
-                ]],
+                'intent' => 'CAPTURE',
+                'purchase_units' => [
+                    [
+                        'amount' => [
+                            'currency_code' => 'USD',
+                            'value' => number_format($paymentRequest->amount, 2, '.', ''),
+                        ],
+                        'description' => "Payment for {$paymentRequest->customer_name}",
+                    ]
+                ],
             ]);
 
             if (!$response->successful()) {
                 throw new \Exception('PayPal order creation failed: ' . $response->body());
             }
 
-            $order   = $response->json();
+            $order = $response->json();
             $orderId = $order['id'];
 
             $paymentRequest->update([
                 'paypal_order_id' => $orderId,
-                'status'          => 'processing',
+                'status' => 'processing',
             ]);
 
             return response()->json([
-                'success'  => true,
+                'success' => true,
                 'order_id' => $orderId,
             ]);
         } catch (\Exception $e) {
@@ -385,7 +387,7 @@ class PaymentController extends Controller
                 ? 'https://api-m.paypal.com'
                 : 'https://api-m.sandbox.paypal.com';
 
-            $orderId  = $request->order_id;
+            $orderId = $request->order_id;
             $response = \Http::withToken($accessToken)
                 ->withHeaders(['Content-Type' => 'application/json'])
                 ->withBody('{}', 'application/json')
@@ -406,7 +408,7 @@ class PaymentController extends Controller
 
                 if (!$duplicate) {
                     $paymentRequest->update([
-                        'status'         => 'paid',
+                        'status' => 'paid',
                         'transaction_id' => $captureId,
                     ]);
                 }
@@ -442,7 +444,7 @@ class PaymentController extends Controller
         }
 
         $paymentRequest->update([
-            'status'         => 'paid',
+            'status' => 'paid',
             'transaction_id' => 'ZELLE-' . strtoupper(Str::random(10)),
         ]);
 
@@ -461,8 +463,8 @@ class PaymentController extends Controller
 
     public function stripeWebhook(Request $request): JsonResponse
     {
-        $payload       = $request->getContent();
-        $sigHeader     = $request->header('Stripe-Signature');
+        $payload = $request->getContent();
+        $sigHeader = $request->header('Stripe-Signature');
         $webhookSecret = config('services.stripe.webhook_secret');
 
         try {
@@ -476,7 +478,7 @@ class PaymentController extends Controller
 
         if ($event->type === 'payment_intent.succeeded') {
             $intent = $event->data->object;
-            $prId   = $intent->metadata->payment_request_id ?? null;
+            $prId = $intent->metadata->payment_request_id ?? null;
 
             if ($prId) {
                 $pr = PaymentRequest::find($prId);
@@ -487,7 +489,7 @@ class PaymentController extends Controller
 
                     if (!$duplicate) {
                         $pr->update([
-                            'status'         => 'paid',
+                            'status' => 'paid',
                             'transaction_id' => $intent->id,
                         ]);
                     }
@@ -514,7 +516,7 @@ class PaymentController extends Controller
         }
 
         try {
-            $isNew    = false;
+            $isNew = false;
             $password = null;
 
             $user = User::where('email', $paymentRequest->email)->first();
@@ -523,10 +525,10 @@ class PaymentController extends Controller
                 $password = $this->generatePassword();
 
                 $user = User::create([
-                    'name'     => $paymentRequest->customer_name,
-                    'email'    => $paymentRequest->email,
+                    'name' => $paymentRequest->customer_name,
+                    'email' => $paymentRequest->email,
                     'password' => Hash::make($password),
-                    'phone'    => $paymentRequest->phone,
+                    'phone' => $paymentRequest->phone,
                 ]);
 
                 $isNew = true;
@@ -534,9 +536,9 @@ class PaymentController extends Controller
 
             $paymentRequest->update(['user_id' => $user->id]);
 
-            // if ($isNew && $password) {
-            //     $this->sendWelcomeEmail($user, $password, $paymentRequest);
-            // }
+            if ($isNew && $password) {
+                $this->sendWelcomeEmail($user, $password, $paymentRequest);
+            }
 
             $token = $user->createToken('payment-autologin')->plainTextToken;
 
@@ -544,7 +546,7 @@ class PaymentController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to register/login user after payment', [
                 'payment_request_id' => $paymentRequest->id,
-                'error'              => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
 
             return null;
@@ -573,9 +575,9 @@ class PaymentController extends Controller
                 $this->gmailApiService = new GmailApiService();
             }
 
-            $subject    = 'Welcome to ' . env('APP_NAME') . ' — Your Account Details';
-            $dashUrl    = 'https://sanjoselogodesign.com/dashboard';
-            $invoiceUrl = 'https://sanjoselogodesign.com/genrate/invoice-' . $paymentRequest->payment_link;
+            $subject = 'Welcome to ' . env('APP_NAME') . ' — Your Account Details';
+            $dashUrl = 'https://losangeleslogodesigns.com/dashboard';
+            $invoiceUrl = 'https://losangeleslogodesigns.com/genrate/invoice-' . $paymentRequest->payment_link;
 
             $emailContent = '
             <!-- Gold banner -->
@@ -680,7 +682,7 @@ class PaymentController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to send welcome email', [
                 'user_id' => $user->id ?? null,
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -696,8 +698,8 @@ class PaymentController extends Controller
                 $this->gmailApiService = new GmailApiService();
             }
 
-            $subject     = 'New Payment Invoice - ' . env('APP_NAME');
-            $invoiceUrl  = 'https://losangeleslogodesigns.com/genrate/invoice-' . $paymentRequest->payment_link;
+            $subject = 'New Payment Invoice - ' . env('APP_NAME');
+            $invoiceUrl = 'https://losangeleslogodesigns.com/genrate/invoice-' . $paymentRequest->payment_link;
             $methodLabel = ucfirst($paymentRequest->payment_method);
 
             $emailContent = '
@@ -793,12 +795,12 @@ class PaymentController extends Controller
 
             Log::info('Payment invoice email sent', [
                 'payment_request_id' => $paymentRequest->id,
-                'recipients'         => $recipients,
+                'recipients' => $recipients,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to send payment invoice email', [
                 'payment_request_id' => $paymentRequest->id,
-                'error'              => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -809,6 +811,8 @@ class PaymentController extends Controller
 
     private function buildEmailTemplate(string $subject, string $bodyRows): string
     {
+        $frontendUrl = 'https://losangeleslogodesigns.com';
+
         return '<!DOCTYPE html>
 <html>
 <head>
@@ -825,7 +829,7 @@ class PaymentController extends Controller
                     <!-- Header -->
                     <tr>
                         <td align="center" style="background-color: #1a1a2e; padding: 28px 40px;">
-                            <img src="https://losangeleslogodesigns.com/assets/la-logo-designs-DOx3q257.png"
+                            <img src="' . $frontendUrl . '/assets/la-logo-designs-DOx3q257.png"
                                  alt="' . env('APP_NAME') . '"
                                  style="max-height: 60px; max-width: 220px; display: block;"
                             />
@@ -859,8 +863,8 @@ class PaymentController extends Controller
     private function getPayPalAccessToken(): string
     {
         $clientId = config('services.paypal.client_id');
-        $secret   = config('services.paypal.secret');
-        $mode     = config('services.paypal.mode', 'sandbox');
+        $secret = config('services.paypal.secret');
+        $mode = config('services.paypal.mode', 'sandbox');
 
         $baseUrl = $mode === 'live'
             ? 'https://api-m.paypal.com'
@@ -880,17 +884,17 @@ class PaymentController extends Controller
     private function generatePaymentLink(): string
     {
         return (string) mt_rand(10000000, 99999999)
-             . (string) mt_rand(100000, 999999);
+            . (string) mt_rand(100000, 999999);
     }
 
     private function generatePassword(): string
     {
-        $upper   = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-        $lower   = 'abcdefghjkmnpqrstuvwxyz';
-        $digits  = '23456789';
+        $upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+        $lower = 'abcdefghjkmnpqrstuvwxyz';
+        $digits = '23456789';
         $special = '@#$!';
 
-        $password  = $upper[random_int(0, strlen($upper) - 1)];
+        $password = $upper[random_int(0, strlen($upper) - 1)];
         $password .= $upper[random_int(0, strlen($upper) - 1)];
         $password .= $lower[random_int(0, strlen($lower) - 1)];
         $password .= $lower[random_int(0, strlen($lower) - 1)];
@@ -909,46 +913,47 @@ class PaymentController extends Controller
     private function sendPaymentWebhook(string $event, PaymentRequest $paymentRequest): void
     {
         Log::info('Webhook method reached', [
-            'event'       => $event,
-            'id'          => $paymentRequest->id,
+            'event' => $event,
+            'id' => $paymentRequest->id,
             'webhook_url' => config('services.msbadmin.webhook_url'),
-            'has_secret'  => !empty(config('services.msbadmin.webhook_secret')),
+            'has_secret' => !empty(config('services.msbadmin.webhook_secret')),
         ]);
 
         try {
             $webhookUrl = config('services.msbadmin.webhook_url');
-            $secret     = config('services.msbadmin.webhook_secret');
+            $secret = config('services.msbadmin.webhook_secret');
 
-            if (empty($webhookUrl) || empty($secret)) return;
+            if (empty($webhookUrl) || empty($secret))
+                return;
 
             Http::withOptions(['verify' => false])
                 ->withHeaders([
                     'X-Webhook-Secret' => $secret,
-                    'Accept'           => 'application/json',
+                    'Accept' => 'application/json',
                 ])
                 ->timeout(10)
                 ->post($webhookUrl, [
-                    'event'  => $event,
+                    'event' => $event,
                     'source' => config('app.name'),
-                    'data'   => [
-                        'lead_id'          => (int) $paymentRequest->id,
-                        'customer_name'    => $paymentRequest->customer_name,
-                        'email'            => $paymentRequest->email,
-                        'phone_no'         => $paymentRequest->phone,
-                        'package_name'     => $paymentRequest->package_name,
-                        'price'            => $paymentRequest->amount,
-                        'payment_link'     => $paymentRequest->payment_link,
-                        'payment_method'   => $paymentRequest->payment_method  ?? null,
-                        'payment_type'     => $paymentRequest->payment_type    ?? null,
-                        'reference'        => $paymentRequest->profile         ?? null,
-                        'status'           => $paymentRequest->status,
-                        'invoice_date'     => $paymentRequest->created_at      ?? null,
-                        'payment_date'     => $paymentRequest->updated_at      ?? null,
-                        'invoice_no'       => 'invoice-' . $paymentRequest->payment_link,
-                        'transaction_id'   => $paymentRequest->transaction_id  ?? null,
-                        'payment_amount'   => $paymentRequest->amount,
+                    'data' => [
+                        'lead_id' => (int) $paymentRequest->id,
+                        'customer_name' => $paymentRequest->customer_name,
+                        'email' => $paymentRequest->email,
+                        'phone_no' => $paymentRequest->phone,
+                        'package_name' => $paymentRequest->package_name,
+                        'price' => $paymentRequest->amount,
+                        'payment_link' => $paymentRequest->payment_link,
+                        'payment_method' => $paymentRequest->payment_method ?? null,
+                        'payment_type' => $paymentRequest->payment_type ?? null,
+                        'reference' => $paymentRequest->profile ?? null,
+                        'status' => $paymentRequest->status,
+                        'invoice_date' => $paymentRequest->created_at ?? null,
+                        'payment_date' => $paymentRequest->updated_at ?? null,
+                        'invoice_no' => 'invoice-' . $paymentRequest->payment_link,
+                        'transaction_id' => $paymentRequest->transaction_id ?? null,
+                        'payment_amount' => $paymentRequest->amount,
                         'payment_currency' => 'usd',
-                        'source'           => config('app.name'),
+                        'source' => config('app.name'),
                     ],
                 ]);
 
@@ -958,4 +963,6 @@ class PaymentController extends Controller
             Log::error('Webhook failed: ' . $e->getMessage());
         }
     }
+
+
 }
