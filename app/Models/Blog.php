@@ -24,6 +24,7 @@ class Blog extends Model
         'meta_title',
         'meta_description',
         'meta_keywords',
+        'schema',
         'is_featured',
         'created_by',
         'updated_by',
@@ -32,6 +33,7 @@ class Blog extends Model
     protected $casts = [
         'is_featured' => 'boolean',
         'published_at' => 'datetime',
+        'schema' => 'array',
     ];
 
     protected static function boot()

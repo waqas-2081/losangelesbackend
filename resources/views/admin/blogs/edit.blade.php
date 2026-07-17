@@ -5,6 +5,9 @@
 
 @section('styles')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/lint/lint.min.css">
 <style>
     :root {
         --primary: #6c5ce7;
@@ -163,10 +166,14 @@
         font-weight: 500;
         cursor: pointer;
         transition: background 0.15s;
+        text-decoration: none;
+        display: inline-block;
     }
 
     .btn-discard:hover {
         background: var(--bg);
+        color: var(--text);
+        text-decoration: none;
     }
 
     .btn-save {
@@ -224,6 +231,55 @@
     .current-image img {
         max-width: 100%;
         border-radius: 6px;
+    }
+
+    /* ===== SCHEMA EDITOR SCROLLBAR STYLES ===== */
+    .schema-editor-wrapper {
+        position: relative;
+        border: 1.5px solid var(--border);
+        border-radius: 7px;
+        overflow: hidden;
+        background: #282a36;
+        width: 663px;
+        box-sizing: border-box;
+    }
+
+    .schema-editor-wrapper .CodeMirror {
+        height: 400px !important;
+        width: 663px !important;
+        border: none !important;
+        border-radius: 0 !important;
+        font-size: 0.85rem;
+        line-height: 1.6;
+        box-sizing: border-box;
+    }
+
+    .schema-editor-wrapper .CodeMirror-scroll {
+        overflow: auto !important;
+        max-height: 400px;
+        min-height: 400px;
+        width: 663px !important;
+        box-sizing: border-box;
+    }
+
+
+    .schema-editor-wrapper .CodeMirror-gutters {
+        background: #1e1f29;
+        border-right: 1px solid #44475a;
+    }
+
+    .schema-editor-wrapper .CodeMirror-linenumber {
+        color: #6272a4;
+    }
+
+    #schemaJsonError {
+        margin-top: 8px;
+        font-size: 0.82rem;
+        padding: 6px 12px;
+        background: #fee2e2;
+        border-radius: 4px;
+        border-left: 3px solid #dc2626;
+        display: none;
     }
 </style>
 @endsection
@@ -296,7 +352,7 @@
                 </div>
 
                 <!-- SEO Section -->
-                <div class="card-box">
+                <div class="card-box mt-3">
                     <h5>
                         <i class="fas fa-search me-2"></i>
                         SEO Settings
@@ -320,43 +376,60 @@
                                value="{{ old('meta_keywords', $blog->meta_keywords) }}">
                     </div>
                 </div>
-            </div>
 
-            <!-- Sidebar -->
-            <div>
-            <div class="card-box">
-                <h5>Publishing</h5>
-                
-                <div class="mb-3">
-                    <label class="form-label">Status <span class="text-danger">*</span></label>
-                    <select name="status" class="form-select" id="statusSelect" required>
-                        <option value="draft" {{ old('status', $blog->status) == 'draft' ? 'selected' : '' }}>Draft</option>
-                        <option value="published" {{ old('status', $blog->status) == 'published' ? 'selected' : '' }}>Published</option>
-                    </select>
-                </div>
+                <!-- Schema Markup Section with Scrollbars -->
+                <div class="card-box mt-3">
+                    <h5>
+                        <i class="fas fa-code me-2"></i>
+                        Schema Markup (JSON-LD)
+                    </h5>
 
-                <div class="mb-3" id="publishDateWrapper">
-                    <label class="form-label">Publish Date</label>
-                    <input type="date" name="published_at" class="form-control"
-                        value="{{ old('published_at', $blog->published_at ? $blog->published_at->format('Y-m-d') : '') }}">
-                    <small class="text-muted">Leave empty to use current date/time when published</small>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label d-block">Featured Post</label>
-                    <div style="display: flex; align-items: center;">
-                        <label class="toggle-switch">
-                            <input type="hidden" name="is_featured" value="0">
-                            <input type="checkbox" name="is_featured" id="isFeatured" value="1" 
-                                {{ old('is_featured', $blog->is_featured) ? 'checked' : '' }}>
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span class="toggle-label">Show in featured section</span>
+                    <div class="mb-3">
+                        <label class="form-label">Schema JSON</label>
+                        <div class="schema-editor-wrapper">
+                            <textarea name="schema" id="schema" rows="10">{{ old('schema', $blog->schema ? json_encode($blog->schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) : '') }}</textarea>
+                        </div>
+                        <small class="text-muted">Must be valid JSON (e.g. Article / BlogPosting structured data). Leave empty if not needed.</small>
+                        <div id="schemaJsonError"></div>
                     </div>
                 </div>
             </div>
 
+            <!-- Sidebar -->
+            <div>
                 <div class="card-box">
+                    <h5>Publishing</h5>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Status <span class="text-danger">*</span></label>
+                        <select name="status" class="form-select" id="statusSelect" required>
+                            <option value="draft" {{ old('status', $blog->status) == 'draft' ? 'selected' : '' }}>Draft</option>
+                            <option value="published" {{ old('status', $blog->status) == 'published' ? 'selected' : '' }}>Published</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="publishDateWrapper">
+                        <label class="form-label">Publish Date</label>
+                        <input type="date" name="published_at" class="form-control"
+                            value="{{ old('published_at', $blog->published_at ? $blog->published_at->format('Y-m-d') : '') }}">
+                        <small class="text-muted">Leave empty to use current date/time when published</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label d-block">Featured Post</label>
+                        <div style="display: flex; align-items: center;">
+                            <label class="toggle-switch">
+                                <input type="hidden" name="is_featured" value="0">
+                                <input type="checkbox" name="is_featured" id="isFeatured" value="1" 
+                                    {{ old('is_featured', $blog->is_featured) ? 'checked' : '' }}>
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-label">Show in featured section</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-box mt-3">
                     <h5>Author Information</h5>
                     
                     <div class="mb-3">
@@ -366,7 +439,7 @@
                     </div>
                 </div>
 
-                <div class="card-box">
+                <div class="card-box mt-3">
                     <h5>Featured Image</h5>
                     
                     @if($blog->thumbnail_image)
@@ -388,7 +461,7 @@
                     </div>
                 </div>
 
-                <div class="card-box">
+                <div class="card-box mt-3">
                     <button type="submit" class="btn-save w-100 mb-2">
                         <i class="fas fa-save me-1"></i> Update Post
                     </button>
@@ -405,40 +478,47 @@
 @section('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="https://cdn.tiny.cloud/1/{{ env('TINYMCE_API_KEY') ? env('TINYMCE_API_KEY') : '' }}/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
-
+<script src="https://cdn.tiny.cloud/1/{{ env('TINYMCE_API_KEY') ?: '' }}/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/lint/lint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsonlint/1.6.2/jsonlint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/lint/json-lint.min.js"></script>
 <script>
 $(document).ready(function() {
-
     // Initialize TinyMCE
-    tinymce.init({
-        selector: '#content',
-        height: 500,
-        menubar: true,
-        plugins: [
-            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-            'insertdatetime', 'media', 'table', 'help', 'wordcount'
-        ],
-        toolbar: 'undo redo | blocks | ' +
-            'bold italic backcolor | alignleft aligncenter ' +
-            'alignright alignjustify | bullist numlist outdent indent | ' +
-            'removeformat | help | link image media | code preview',
-        content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px }',
-        images_upload_url: '{{ route("admin.blogs.upload-image") }}',
-        images_upload_credentials: true,
-        automatic_uploads: true,
-        file_picker_types: 'image',
-        setup: function(editor) {
-            editor.on('change', function() {
-                editor.save();
-            });
-        }
-    });
+    if (typeof tinymce !== 'undefined') {
+        tinymce.init({
+            selector: '#content',
+            height: 500,
+            menubar: true,
+            plugins: [
+                'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                'insertdatetime', 'media', 'table', 'help', 'wordcount'
+            ],
+            toolbar: 'undo redo | blocks | ' +
+                'bold italic backcolor | alignleft aligncenter ' +
+                'alignright alignjustify | bullist numlist outdent indent | ' +
+                'removeformat | help | link image media | code preview',
+            content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px }',
+            images_upload_url: '{{ route("admin.blogs.upload-image") }}',
+            images_upload_credentials: true,
+            automatic_uploads: true,
+            file_picker_types: 'image',
+            setup: function(editor) {
+                editor.on('change', function() {
+                    editor.save();
+                });
+            }
+        });
+    }
 
     // Auto-generate slug from title
+    var slugUserModified = false;
+    
     $('#title').on('input', function() {
-        if (!$('#slug').data('user-modified')) {
+        if (!slugUserModified) {
             let slug = $(this).val()
                 .toLowerCase()
                 .replace(/[^\w\s-]/g, '')
@@ -449,7 +529,7 @@ $(document).ready(function() {
     });
 
     $('#slug').on('input', function() {
-        $(this).data('user-modified', true);
+        slugUserModified = true;
     });
 
     // Character counter for short description
@@ -487,8 +567,70 @@ $(document).ready(function() {
     }
 
     $('#statusSelect').on('change', togglePublishDate);
-    togglePublishDate(); // run on page load
+    togglePublishDate();
 
+    // ===== SCHEMA JSON CODE EDITOR WITH SCROLLBARS =====
+    var schemaTextarea = document.getElementById('schema');
+    if (schemaTextarea) {
+        var schemaEditor = CodeMirror.fromTextArea(schemaTextarea, {
+            mode: { name: 'javascript', json: true },
+            theme: 'dracula',
+            lineNumbers: true,
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            gutters: ['CodeMirror-lint-markers'],
+            lint: true,
+            tabSize: 2,
+            scrollbarStyle: 'native',
+            lineWrapping: false,
+            viewportMargin: Infinity,
+            workDelay: 300,
+            workTime: 100,
+            indentUnit: 2,
+            electricChars: true,
+            smartIndent: true
+        });
+
+        setTimeout(function() {
+            schemaEditor.refresh();
+        }, 600);
+
+        $(window).on('resize', function() {
+            schemaEditor.refresh();
+        });
+
+        $('#blogForm').on('submit', function(e) {
+            schemaEditor.save();
+
+            var raw = $('#schema').val().trim();
+            $('#schemaJsonError').hide().text('');
+
+            if (raw !== '') {
+                try {
+                    JSON.parse(raw);
+                } catch (err) {
+                    e.preventDefault();
+                    $('#schemaJsonError')
+                        .text('Schema field must contain valid JSON: ' + err.message)
+                        .show();
+                    schemaEditor.focus();
+                    return false;
+                }
+            }
+        });
+
+        schemaEditor.on('change', function() {
+            var content = schemaEditor.getValue().trim();
+            if (content !== '') {
+                try {
+                    JSON.parse(content);
+                    $('#schemaJsonError').hide();
+                } catch (err) {
+                    // Silent validation during typing
+                }
+            }
+        });
+    }
 });
 </script>
 @endsection

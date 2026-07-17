@@ -65,6 +65,7 @@ class BlogController extends Controller
             'meta_title' => 'nullable|string|max:500',
             'meta_description' => 'nullable|string|max:500',
             'meta_keywords' => 'nullable|string|max:500',
+            'schema' => 'nullable|json',
             'is_featured' => 'boolean',
         ]);
 
@@ -81,6 +82,14 @@ class BlogController extends Controller
         if ($validated['status'] === 'published' && empty($validated['published_at'])) {
             $validated['published_at'] = now();
         }
+
+        // Decode schema JSON string into an array before saving.
+        // The 'array' cast on the model will re-encode it correctly.
+        // Without this, the already-JSON-encoded string gets encoded
+        // a second time (double-encoding) and breaks on re-save/re-edit.
+        $validated['schema'] = !empty($validated['schema'])
+            ? json_decode($validated['schema'], true)
+            : null;
 
         // Handle image upload
         if ($request->hasFile('thumbnail_image')) {
@@ -113,6 +122,7 @@ class BlogController extends Controller
             'meta_title' => 'nullable|string|max:500',
             'meta_description' => 'nullable|string|max:500',
             'meta_keywords' => 'nullable|string|max:500',
+            'schema' => 'nullable|json',
             'is_featured' => 'boolean',
         ]);
 
@@ -128,6 +138,12 @@ class BlogController extends Controller
         if ($validated['status'] === 'published' && empty($validated['published_at'])) {
             $validated['published_at'] = $blog->published_at ?? now();
         }
+
+        // Decode schema JSON string into an array before saving.
+        // Same double-encoding issue as store() — must decode here too.
+        $validated['schema'] = !empty($validated['schema'])
+            ? json_decode($validated['schema'], true)
+            : null;
 
         // Handle image upload
         if ($request->hasFile('thumbnail_image')) {
