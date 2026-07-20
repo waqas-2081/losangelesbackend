@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\LogoBriefController;
+use App\Http\Controllers\Admin\LogoCreatorController;
 use App\Http\Controllers\Admin\PackageController;
 use App\Http\Controllers\Admin\PortfolioController;
 use App\Http\Controllers\Admin\PromoLeadController;
@@ -96,6 +97,11 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('promo-leads', PromoLeadController::class)->only(['index', 'destroy']);
 
+        Route::get('/logo-creator', [LogoCreatorController::class, 'index'])->name('logo-creator.index');
+        Route::get('/logo-creator/{logoCreator}', [LogoCreatorController::class, 'show'])->name('logo-creator.show');
+        Route::post('/logo-creator/{logoCreator}/status', [LogoCreatorController::class, 'updateStatus'])->name('logo-creator.status');
+        Route::post('/logo-creator/{logoCreator}/notes', [LogoCreatorController::class, 'updateNotes'])->name('logo-creator.notes');
+        Route::delete('/logo-creator/{logoCreator}', [LogoCreatorController::class, 'destroy'])->name('logo-creator.destroy');
     });
 
 

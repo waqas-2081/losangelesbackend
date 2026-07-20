@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\LogoBriefController;
+use App\Http\Controllers\Api\LogoCreatorController;
 use App\Http\Controllers\Api\PackageController;
 use App\Http\Controllers\Api\PortfolioController;
 use App\Http\Controllers\Api\PromoLeadController;
@@ -79,3 +80,5 @@ Route::middleware('auth:sanctum')->prefix('dashboard')->name('api.dashboard.')->
     Route::get('/website-projects', [UserDashboardController::class, 'websiteProjects']);
     Route::get('/website-projects/{websiteBrief}', [UserDashboardController::class, 'websiteProjectShow']);
 });
+
+Route::post('/logo-creator/autosave', [LogoCreatorController::class, 'autosave']);

@@ -44,7 +44,13 @@
                         <span class="menu-item" data-key="t-logo-brief">Logo Briefs</span>
                     </a>
                 </li>
-
+                <li>
+                    <a href="{{ route('admin.logo-creator.index') }}">
+                        <i class="bx bx-paint icon nav-icon"></i>
+                        <span class="menu-item" data-key="t-logo-brief">Logo Creator</span>
+                    </a>
+                </li>
+           
                 <li>
                     <a href="{{ route('admin.website-briefs.index') }}">
                         <i class="bx bx-globe icon nav-icon"></i>
