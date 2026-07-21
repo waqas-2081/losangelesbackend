@@ -98,6 +98,7 @@ class BlogController extends Controller
         $data['meta_title'] = $blog->meta_title;
         $data['meta_description'] = $blog->meta_description;
         $data['meta_keywords'] = $blog->meta_keywords;
+        $data['schema'] = $blog->schema;
 
         return $data;
     }

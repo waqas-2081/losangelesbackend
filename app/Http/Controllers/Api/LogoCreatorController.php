@@ -33,12 +33,18 @@ class LogoCreatorController extends Controller
 
         $brief = LogoCreator::firstOrNew(['session_token' => $sessionToken]);
 
-        $brief->fill(collect($validated)->except('session_token')->toArray());
+        // Only update fields that were actually sent so partial drafts don't wipe data.
+        foreach (['business_name', 'slogan', 'industry', 'email', 'phone', 'current_step'] as $field) {
+            if (array_key_exists($field, $validated)) {
+                $brief->{$field} = $validated[$field];
+            }
+        }
+
         $brief->session_token = $sessionToken;
 
         // Mark as complete once we're on the final step and have an email
-        $finalStep = $validated['current_step'] ?? $brief->current_step;
-        if (!empty($brief->email) && $finalStep >= 3) {
+        $finalStep = $validated['current_step'] ?? $brief->current_step ?? 1;
+        if (!empty($brief->email) && (int) $finalStep >= 3) {
             $brief->is_complete = true;
         }
 
@@ -48,7 +54,7 @@ class LogoCreatorController extends Controller
             'success'       => true,
             'session_token' => $sessionToken,
             'id'            => $brief->id,
-            'is_complete'   => $brief->is_complete,
+            'is_complete'   => (bool) $brief->is_complete,
         ]);
     }
 }
