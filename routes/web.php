@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\LogoCreatorController;
 use App\Http\Controllers\Admin\PackageController;
 use App\Http\Controllers\Admin\PortfolioController;
 use App\Http\Controllers\Admin\PromoLeadController;
+use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\WebsiteBriefController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
@@ -102,6 +103,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/logo-creator/{logoCreator}/status', [LogoCreatorController::class, 'updateStatus'])->name('logo-creator.status');
         Route::post('/logo-creator/{logoCreator}/notes', [LogoCreatorController::class, 'updateNotes'])->name('logo-creator.notes');
         Route::delete('/logo-creator/{logoCreator}', [LogoCreatorController::class, 'destroy'])->name('logo-creator.destroy');
+
+        Route::get('/site-settings', [SiteSettingController::class, 'edit'])->name('site-settings.edit');
+        Route::post('/site-settings', [SiteSettingController::class, 'update'])->name('site-settings.update');
+
     });
 
 

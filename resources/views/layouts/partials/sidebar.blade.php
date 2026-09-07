@@ -115,6 +115,13 @@
                     </ul>
                 </li>
 
+                <li>
+                    <a href="{{ route('admin.site-settings.edit') }}">
+                        <i class="bx bx-cog icon nav-icon"></i>
+                        <span class="menu-item" data-key="t-site-settings">Site Settings</span>
+                    </a>
+                </li>
+           
 
             </ul>
         </div>
