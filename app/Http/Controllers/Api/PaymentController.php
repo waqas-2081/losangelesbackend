@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PaymentRequest;
 use App\Models\User;
 use App\Services\GmailApiService;
+use App\Services\MetaCapiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -19,9 +20,15 @@ use Stripe\Stripe;
 class PaymentController extends Controller
 {
     private $gmailApiService;
+    private $metaCapi;
 
-    public function __construct()
+    // Fallback event_source_url when the frontend didn't pass page_url.
+    private const FRONTEND_URL = 'https://losangeleslogodesigns.com';
+
+    public function __construct(MetaCapiService $metaCapi)
     {
+        $this->metaCapi = $metaCapi;
+
         try {
             $this->gmailApiService = new GmailApiService();
         } catch (\Exception $e) {
@@ -191,6 +198,7 @@ class PaymentController extends Controller
     {
         $request->validate([
             'payment_intent_id' => 'required|string',
+            'page_url' => 'nullable|url',
         ]);
 
         $paymentRequest = PaymentRequest::findOrFail($id);
@@ -210,6 +218,8 @@ class PaymentController extends Controller
                     ->where('id', '!=', $paymentRequest->id)
                     ->exists();
 
+                $wasAlreadyPaid = $paymentRequest->isPaid();
+
                 if (!$duplicate) {
                     $paymentRequest->update([
                         'status' => 'paid',
@@ -221,6 +231,20 @@ class PaymentController extends Controller
                 $loginToken = $this->registerOrLoginUser($paymentRequest);
                 $this->sendPaymentInvoiceEmail($paymentRequest);
                 $this->sendPaymentWebhook('payment.created', $paymentRequest);
+
+                if (!$duplicate && !$wasAlreadyPaid) {
+                    $this->metaCapi->sendPurchaseEventRaw(
+                        id: $paymentRequest->id,
+                        email: $paymentRequest->email,
+                        phone: $paymentRequest->phone,
+                        eventSourceUrl: $request->input('page_url') ?: $this->invoiceUrl($paymentRequest),
+                        amount: (float) $paymentRequest->amount,
+                        currency: 'USD',
+                        ip: $request->ip(),
+                        userAgent: $request->userAgent(),
+                        customerName: $paymentRequest->customer_name,
+                    );
+                }
 
                 return response()->json(['success' => true, 'login_token' => $loginToken]);
             }
@@ -291,6 +315,7 @@ class PaymentController extends Controller
     {
         $request->validate([
             'payment_intent_id' => 'required|string',
+            'page_url' => 'nullable|url',
         ]);
 
         $paymentRequest = PaymentRequest::findOrFail($id);
@@ -310,6 +335,8 @@ class PaymentController extends Controller
                     ->where('id', '!=', $paymentRequest->id)
                     ->exists();
 
+                $wasAlreadyPaid = $paymentRequest->isPaid();
+
                 if (!$duplicate) {
                     $paymentRequest->update([
                         'status' => 'paid',
@@ -321,6 +348,20 @@ class PaymentController extends Controller
                 $loginToken = $this->registerOrLoginUser($paymentRequest);
                 $this->sendPaymentInvoiceEmail($paymentRequest);
                 $this->sendPaymentWebhook('payment.created', $paymentRequest);
+
+                if (!$duplicate && !$wasAlreadyPaid) {
+                    $this->metaCapi->sendPurchaseEventRaw(
+                        id: $paymentRequest->id,
+                        email: $paymentRequest->email,
+                        phone: $paymentRequest->phone,
+                        eventSourceUrl: $request->input('page_url') ?: $this->invoiceUrl($paymentRequest),
+                        amount: (float) $paymentRequest->amount,
+                        currency: 'USD',
+                        ip: $request->ip(),
+                        userAgent: $request->userAgent(),
+                        customerName: $paymentRequest->customer_name,
+                    );
+                }
 
                 return response()->json(['success' => true, 'login_token' => $loginToken]);
             }
@@ -399,6 +440,7 @@ class PaymentController extends Controller
     {
         $request->validate([
             'order_id' => 'required|string',
+            'page_url' => 'nullable|url',
         ]);
 
         $paymentRequest = PaymentRequest::findOrFail($id);
@@ -434,6 +476,8 @@ class PaymentController extends Controller
                     ->where('id', '!=', $paymentRequest->id)
                     ->exists();
 
+                $wasAlreadyPaid = $paymentRequest->isPaid();
+
                 if (!$duplicate) {
                     $paymentRequest->update([
                         'status' => 'paid',
@@ -445,6 +489,20 @@ class PaymentController extends Controller
                 $loginToken = $this->registerOrLoginUser($paymentRequest);
                 $this->sendPaymentInvoiceEmail($paymentRequest);
                 $this->sendPaymentWebhook('payment.created', $paymentRequest);
+
+                if (!$duplicate && !$wasAlreadyPaid) {
+                    $this->metaCapi->sendPurchaseEventRaw(
+                        id: $paymentRequest->id,
+                        email: $paymentRequest->email,
+                        phone: $paymentRequest->phone,
+                        eventSourceUrl: $request->input('page_url') ?: $this->invoiceUrl($paymentRequest),
+                        amount: (float) $paymentRequest->amount,
+                        currency: 'USD',
+                        ip: $request->ip(),
+                        userAgent: $request->userAgent(),
+                        customerName: $paymentRequest->customer_name,
+                    );
+                }
 
                 return response()->json(['success' => true, 'login_token' => $loginToken]);
             }
@@ -480,6 +538,19 @@ class PaymentController extends Controller
         $this->registerOrLoginUser($paymentRequest);
         $this->sendPaymentInvoiceEmail($paymentRequest);
         $this->sendPaymentWebhook('payment.created', $paymentRequest);
+
+        // Approved by admin, not the customer's browser — no reliable customer
+        // IP/user agent available here (PaymentRequest has no stored ip column),
+        // so this fires with email/phone/name matching only.
+        $this->metaCapi->sendPurchaseEventRaw(
+            id: $paymentRequest->id,
+            email: $paymentRequest->email,
+            phone: $paymentRequest->phone,
+            eventSourceUrl: $this->invoiceUrl($paymentRequest),
+            amount: (float) $paymentRequest->amount,
+            currency: 'USD',
+            customerName: $paymentRequest->customer_name,
+        );
 
         return response()->json(['success' => true]);
     }
@@ -526,6 +597,22 @@ class PaymentController extends Controller
                     $this->registerOrLoginUser($pr);
                     $this->sendPaymentInvoiceEmail($pr);
                     $this->sendPaymentWebhook('payment.created', $pr);
+
+                    // Fallback path — normally stripeConfirm() already fired the
+                    // Purchase event, so this only fires the "purchase" if that
+                    // never happened (e.g. the customer closed the browser before
+                    // confirm ran). Same event_id either way, so Meta dedupes.
+                    if (!$duplicate) {
+                        $this->metaCapi->sendPurchaseEventRaw(
+                            id: $pr->id,
+                            email: $pr->email,
+                            phone: $pr->phone,
+                            eventSourceUrl: $this->invoiceUrl($pr),
+                            amount: (float) $pr->amount,
+                            currency: 'USD',
+                            customerName: $pr->customer_name,
+                        );
+                    }
                 }
             }
         }
@@ -887,6 +974,11 @@ class PaymentController extends Controller
     // ══════════════════════════════════════════════════════════════════
     // PRIVATE HELPERS
     // ══════════════════════════════════════════════════════════════════
+
+    private function invoiceUrl(PaymentRequest $paymentRequest): string
+    {
+        return self::FRONTEND_URL . '/genrate/invoice-' . $paymentRequest->payment_link;
+    }
 
     private function getPayPalAccessToken(): string
     {

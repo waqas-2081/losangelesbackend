@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\LogoCreatorController;
 use App\Http\Controllers\Api\PackageController;
 use App\Http\Controllers\Api\PortfolioController;
 use App\Http\Controllers\Api\PromoLeadController;
+use App\Http\Controllers\Api\SiteSettingController;
 use App\Http\Controllers\Api\UserDashboardController;
 use App\Http\Controllers\Api\WebsiteBriefController;
 use App\Http\Controllers\Api\PaymentController;
@@ -37,6 +38,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/portfolios', [PortfolioController::class, 'apiIndex']);
     Route::get('/portfolio-categories', [PortfolioController::class, 'apiCategories']);
 
+    Route::get('/site-settings', [SiteSettingController::class, 'show']);
 
 });
 
