@@ -47,11 +47,22 @@ class PaymentController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'payment_method' => 'required|in:stripe,paypal,cashapp,zelle,venmo',
             'payment_type' => 'nullable|in:front,upsell',
+            'addons' => 'nullable|string|max:1000',
+            'duration' => 'nullable|string|max:255',
+            'notes' => 'nullable|string|max:5000',
         ]);
 
         do {
             $paymentLink = $this->generatePaymentLink();
         } while (PaymentRequest::where('payment_link', $paymentLink)->exists());
+
+        $notes = $validated['notes'] ?? null;
+        if (!$notes && (!empty($validated['addons']) || !empty($validated['duration']))) {
+            $notes = json_encode([
+                'addons' => $validated['addons'] ?? null,
+                'duration' => $validated['duration'] ?? null,
+            ], JSON_UNESCAPED_UNICODE);
+        }
 
         $paymentRequest = PaymentRequest::create([
             'profile' => $validated['profile'] ?? null,
@@ -64,6 +75,7 @@ class PaymentController extends Controller
             'payment_type' => $validated['payment_type'] ?? null,
             'status' => 'pending',
             'payment_link' => $paymentLink,
+            'notes' => $notes,
         ]);
 
         $this->sendPaymentWebhook('payment.pending', $paymentRequest);
@@ -86,6 +98,20 @@ class PaymentController extends Controller
     {
         $paymentRequest = PaymentRequest::where('payment_link', $token)->firstOrFail();
 
+        $addons = null;
+        $duration = null;
+        if (!empty($paymentRequest->notes)) {
+            $decoded = json_decode($paymentRequest->notes, true);
+            if (is_array($decoded)) {
+                $addons = isset($decoded['addons']) && $decoded['addons'] !== ''
+                    ? (string) $decoded['addons']
+                    : null;
+                $duration = isset($decoded['duration']) && $decoded['duration'] !== ''
+                    ? (string) $decoded['duration']
+                    : null;
+            }
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -95,6 +121,8 @@ class PaymentController extends Controller
                 'email' => $paymentRequest->email,
                 'phone' => $paymentRequest->phone,
                 'package_name' => $paymentRequest->package_name,
+                'addons' => $addons,
+                'duration' => $duration,
                 'amount' => $paymentRequest->amount,
                 'payment_method' => $paymentRequest->payment_method,
                 'status' => $paymentRequest->status,
