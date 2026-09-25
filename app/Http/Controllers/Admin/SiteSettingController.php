@@ -11,6 +11,31 @@ use Illuminate\Support\Facades\Validator;
 
 class SiteSettingController extends Controller
 {
+    /**
+     * Get site settings for API (frontend consumption)
+     */
+    public function show()
+    {
+        $setting = SiteSetting::current();
+
+        return response()->json([
+            'data' => [
+                'popup_image' => $setting->popup_image_url,
+                'email' => $setting->email,
+                'phone' => $setting->phone,
+                'location' => $setting->location,
+                'social' => [
+                    'facebook' => $setting->facebook_url,
+                    'instagram' => $setting->instagram_url,
+                    'x' => $setting->x_url,
+                    'linkedin' => $setting->linkedin_url,
+                    'tiktok' => $setting->tiktok_url,
+                    'youtube' => $setting->youtube_url,
+                ],
+            ],
+        ]);
+    }
+
     public function edit()
     {
         $setting = SiteSetting::current();
